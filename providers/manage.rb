@@ -58,10 +58,14 @@ action :create do
 
       # Set home to location in data bag,
       # or a reasonable default (/home/$user).
+      default_home = case node['platform']
+                       when 'mac_os_x' then '/Users/'
+                       else '/home/'
+                     end
       if u['home']
         home_dir = u['home']
       else
-        home_dir = "/home/#{u['username']}"
+        home_dir = default_home + u['username']
       end
 
       # The user block will fail if the group does not yet exist.
@@ -91,10 +95,20 @@ action :create do
         home home_dir
       end
 
+      default_group = case node['platform']
+                        when 'mac_os_x' then 'admin'
+                        else u['username']
+                      end
+
       if home_dir != "/dev/null"
+        directory home_dir do
+          owner u['username']
+          group u['gid'] || default_group
+          mode "0700"
+        end
         directory "#{home_dir}/.ssh" do
           owner u['username']
-          group u['gid'] || u['username']
+          group u['gid'] || default_group
           mode "0700"
         end
 
@@ -103,7 +117,7 @@ action :create do
             source "authorized_keys.erb"
             cookbook new_resource.cookbook
             owner u['username']
-            group u['gid'] || u['username']
+            group u['gid'] || default_group
             mode "0600"
             variables :ssh_keys => u['ssh_keys']
           end
