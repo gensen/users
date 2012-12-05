@@ -1,3 +1,7 @@
+## v1.2.1:
+
+* Added support for mac_os_x
+
 ## v1.2.0:
 
 * [COOK-1398] - Provider manage.rb ignores username attribute
